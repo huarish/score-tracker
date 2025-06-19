@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人积分记录系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .total-score {
+            font-size: 1.5em;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            background: rgba(102, 126, 234, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        
+        .input-group label {
+            min-width: 120px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        input[type="number"], input[type="text"] {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+        
+        .reward-section {
+            background: linear-gradient(135deg, rgba(255, 193, 61, 0.1), rgba(255, 107, 107, 0.1));
+            border-left-color: #ffc13d;
+        }
+        
+        .history {
+            margin-top: 30px;
+        }
+        
+        .history-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-item .date {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .history-item .score {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+        
+        .progress-bar {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .reward-info {
+            background: rgba(255, 193, 61, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 2px dashed #ffc13d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 积分记录系统</h1>
+            <div class="total-score">
+                总积分: <span id="totalScore">0</span> 分
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div style="font-size: 0.8em; margin-top: 5px;">
+                    距离下次奖励还需: <span id="pointsNeeded">15</span> 分
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- 早起记录 -->
+            <div class="section">
+                <h2>🌅 早起记录 (7点起床)</h2>
+                <div class="input-group">
+                    <label>今天早起了吗？</label>
+                    <input type="checkbox" id="earlyRise" onchange="updateScore()">
+                    <span>+1分</span>
+                </div>
+            </div>
+            
+            <!-- 专注时长 -->
+            <div class="section">
+                <h2>🍅 专注时长 (番茄钟)</h2>
+                <div class="input-group">
+                    <label>专注时长 (小时):</label>
+                    <input type="number" id="focusHours" min="0" max="24" step="0.5" onchange="updateScore()">
+                    <span>每小时 +0.5分</span>
+                </div>
+            </div>
+            
+            <!-- 任务完成度 -->
+            <div class="section">
+                <h2>✅ 任务完成度</h2>
+                <div class="input-group">
+                    <label>完成度 (%):</label>
+                    <input type="number" id="taskCompletion" min="0" max="100" onchange="updateScore()">
+                    <span>60-80%: +1分 | 80-100%: +2分</span>
+                </div>
+            </div>
+            
+            <!-- 记录按钮 -->
+            <div style="text-align: center; margin: 30px 0;">
+                <button class="btn" onclick="saveRecord()">📝 保存今日记录</button>
+                <button class="btn btn-danger" onclick="clearToday()">🔄 重置今日</button>
+                <button class="btn btn-danger" onclick="resetAllData()" style="margin-left: 10px;">⚠️ 重置所有数据</button>
+                <button class="btn" onclick="exportData()" style="background: linear-gradient(135deg, #28a745, #20c997);">📊 导出数据</button>
+            </div>
+            
+            <!-- 奖励兑换 -->
+            <div class="section reward-section">
+                <h2>🎁 奖励兑换</h2>
+                <div class="reward-info">
+                    <strong>兑换规则:</strong><br>
+                    • 15分 = 芒果毛巾卷/雪媚娘<br>
+                    • 30分 = 4寸小蛋糕/20元内任选礼物<br>
+                    • 45分 = 35元内任选礼物<br>
+                    • 60分 = 50元内任选礼物<br>
+                    <strong>当前可兑换:</strong> <span id="availableRewards"></span>
+                </div>
+                <div class="input-group" style="margin-top: 15px;">
+                    <label>选择奖励:</label>
+                    <select id="rewardType" style="padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px;">
+                        <option value="">请选择奖励类型</option>
+                        <option value="15">15分 - 芒果毛巾卷/雪媚娘</option>
+                        <option value="30">30分 - 4寸小蛋糕/20元内任选</option>
+                        <option value="45">45分 - 35元内任选礼物</option>
+                        <option value="60">60分 - 50元内任选礼物</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>具体奖品:</label>
+                    <input type="text" id="rewardName" placeholder="输入具体奖品名称">
+                    <button class="btn" onclick="redeemReward()">🎯 兑换奖励</button>
+                </div>
+            </div>
+            
+            <!-- 历史记录 -->
+            <div class="history">
+                <h2 style="color: #667eea; margin-bottom: 20px;">📊 历史记录</h2>
+                <div id="historyList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let totalScore = 0;
+        let todayScore = 0;
+        let history = [];
+
+        // 页面加载时恢复数据
+        window.onload = function() {
+            loadData();
+            updateDisplay();
+        }
+        
+        // 导出数据功能
+        function exportData() {
+            const data = {
+                totalScore: totalScore,
+                history: history,
+                exportDate: new Date().toLocaleString('zh-CN')
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `积分记录_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.json`;
+            link.click();
+            
+            alert('数据导出成功！可以备份或分享给其他设备。');
+        };
+
+        // 保存数据到localStorage
+        function saveData() {
+            const data = {
+                totalScore: totalScore,
+                history: history,
+                lastSaveDate: new Date().toDateString()
+            };
+            localStorage.setItem('scoreTrackerData', JSON.stringify(data));
+            console.log('数据已保存到本地存储');
+        }
+
+        // 从localStorage加载数据
+        function loadData() {
+            try {
+                const savedData = localStorage.getItem('scoreTrackerData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    totalScore = data.totalScore || 0;
+                    history = data.history || [];
+                    console.log('数据已从本地存储加载');
+                    updateHistoryDisplay();
+                }
+            } catch (error) {
+                console.log('加载数据失败，使用默认值');
+                totalScore = 0;
+                history = [];
+            }
+        }
+
+        // 更新分数
+        function updateScore() {
+            todayScore = 0;
+            
+            // 早起积分
+            if (document.getElementById('earlyRise').checked) {
+                todayScore += 1;
+            }
+            
+            // 专注时长积分
+            const focusHours = parseFloat(document.getElementById('focusHours').value) || 0;
+            todayScore += focusHours * 0.5;
+            
+            // 任务完成度积分
+            const completion = parseInt(document.getElementById('taskCompletion').value) || 0;
+            if (completion >= 60 && completion < 80) {
+                todayScore += 1;
+            } else if (completion >= 80) {
+                todayScore += 2;
+            }
+            
+            updateDisplay();
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('totalScore').textContent = totalScore.toFixed(1);
+            
+            // 更新可兑换奖励显示
+            const rewards = [];
+            if (totalScore >= 60) rewards.push('60分奖励');
+            if (totalScore >= 45) rewards.push('45分奖励');
+            if (totalScore >= 30) rewards.push('30分奖励');
+            if (totalScore >= 15) rewards.push('15分奖励');
+            
+            document.getElementById('availableRewards').textContent = 
+                rewards.length > 0 ? rewards.join(', ') : '暂无可兑换奖励';
+            
+            // 计算距离下次奖励的积分
+            let nextReward = 15;
+            if (totalScore >= 15) nextReward = 30;
+            if (totalScore >= 30) nextReward = 45;
+            if (totalScore >= 45) nextReward = 60;
+            if (totalScore >= 60) nextReward = Math.ceil(totalScore / 60) * 60;
+            
+            const pointsNeeded = Math.max(0, nextReward - totalScore);
+            document.getElementById('pointsNeeded').textContent = pointsNeeded.toFixed(1);
+            
+            // 更新进度条（以15分为一个周期）
+            const progress = totalScore >= 15 ? 
+                ((totalScore % 15) / 15 * 100) : 
+                (totalScore / 15 * 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // 保存今日记录
+        function saveRecord() {
+            if (todayScore > 0) {
+                const today = new Date().toLocaleDateString('zh-CN');
+                
+                // 检查今天是否已经记录过
+                const todayExists = history.some(record => 
+                    record.date === today && record.score > 0
+                );
+                
+                if (todayExists) {
+                    if (!confirm('今天已经有记录了，是否要追加新的记录？')) {
+                        return;
+                    }
+                }
+                
+                totalScore += todayScore;
+                const record = {
+                    date: today,
+                    time: new Date().toLocaleTimeString('zh-CN', {hour12: false}),
+                    score: todayScore,
+                    details: getRecordDetails()
+                };
+                history.unshift(record);
+                
+                // 限制历史记录数量
+                if (history.length > 100) {
+                    history = history.slice(0, 100);
+                }
+                
+                updateHistoryDisplay();
+                updateDisplay();
+                saveData();
+                
+                alert(`今日记录已保存！获得 ${todayScore.toFixed(1)} 分\n总积分: ${totalScore.toFixed(1)} 分`);
+                clearToday();
+            } else {
+                alert('今日还没有获得积分哦！');
+            }
+        }
+
+        // 获取记录详情
+        function getRecordDetails() {
+            let details = [];
+            if (document.getElementById('earlyRise').checked) {
+                details.push('早起 +1分');
+            }
+            const focusHours = parseFloat(document.getElementById('focusHours').value) || 0;
+            if (focusHours > 0) {
+                details.push(`专注${focusHours}小时 +${(focusHours * 0.5).toFixed(1)}分`);
+            }
+            const completion = parseInt(document.getElementById('taskCompletion').value) || 0;
+            if (completion >= 60) {
+                const points = completion >= 80 ? 2 : 1;
+                details.push(`任务完成${completion}% +${points}分`);
+            }
+            return details.join(', ');
+        }
+
+        // 清空今日记录
+        function clearToday() {
+            document.getElementById('earlyRise').checked = false;
+            document.getElementById('focusHours').value = '';
+            document.getElementById('taskCompletion').value = '';
+            document.getElementById('rewardType').value = '';
+            document.getElementById('rewardName').value = '';
+            todayScore = 0;
+            updateDisplay();
+            console.log('今日输入已清空');
+        }
+        
+        // 重置所有数据
+        function resetAllData() {
+            if (confirm('⚠️ 警告：这将删除所有积分记录和历史数据，此操作不可恢复！\n\n确定要重置所有数据吗？')) {
+                if (confirm('请再次确认：真的要删除所有数据吗？')) {
+                    // 清空所有数据
+                    totalScore = 0;
+                    todayScore = 0;
+                    history = [];
+                    
+                    // 清空表单
+                    clearToday();
+                    
+                    // 清空本地存储
+                    localStorage.removeItem('scoreTrackerData');
+                    
+                    // 更新显示
+                    updateDisplay();
+                    updateHistoryDisplay();
+                    
+                    alert('✅ 所有数据已重置完成！');
+                }
+            }
+        }
+
+        // 兑换奖励
+        function redeemReward() {
+            const rewardType = document.getElementById('rewardType').value;
+            const rewardName = document.getElementById('rewardName').value.trim();
+            
+            if (!rewardType) {
+                alert('请选择奖励类型！');
+                return;
+            }
+            
+            if (!rewardName) {
+                alert('请输入具体奖品名称！');
+                return;
+            }
+            
+            const rewardCost = parseInt(rewardType);
+            
+            if (totalScore >= rewardCost) {
+                if (confirm(`确认兑换 ${rewardCost} 分的奖励: ${rewardName}？`)) {
+                    totalScore -= rewardCost;
+                    const record = {
+                        date: new Date().toLocaleDateString('zh-CN'),
+                        time: new Date().toLocaleTimeString('zh-CN', {hour12: false}),
+                        score: -rewardCost,
+                        details: `兑换奖励(${rewardCost}分): ${rewardName}`
+                    };
+                    history.unshift(record);
+                    
+                    updateHistoryDisplay();
+                    updateDisplay();
+                    saveData();
+                    
+                    document.getElementById('rewardName').value = '';
+                    document.getElementById('rewardType').value = '';
+                    alert(`🎉 恭喜！成功兑换奖励: ${rewardName}\n消耗 ${rewardCost} 分，剩余 ${totalScore.toFixed(1)} 分`);
+                }
+            } else {
+                alert(`积分不足！需要 ${rewardCost} 分，当前只有 ${totalScore.toFixed(1)} 分`);
+            }
+        }
+
+        // 更新历史记录显示
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">暂无记录</div>';
+                return;
+            }
+            
+            history.forEach(record => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                const scoreClass = record.score > 0 ? 'score' : 'score-negative';
+                const scoreText = record.score > 0 ? `+${record.score.toFixed(1)}` : record.score.toFixed(1);
+                
+                const timeDisplay = record.time ? ` ${record.time}` : '';
+                
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight: bold;">${record.details}</div>
+                        <div class="date">${record.date}${timeDisplay}</div>
+                    </div>
+                    <div class="${scoreClass}">${scoreText} 分</div>
+                `;
+                
+                if (record.score < 0) {
+                    item.style.borderLeftColor = '#ff6b6b';
+                    item.style.background = 'linear-gradient(90deg, rgba(255, 107, 107, 0.05), white)';
+                }
+                
+                historyList.appendChild(item);
+            });
+        }
+    </script>
+    
+    <style>
+        .score-negative {
+            color: #ff6b6b !important;
+        }
+        
+        select {
+            transition: border-color 0.3s;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea !important;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+    </style>
+</body>
+</html>
